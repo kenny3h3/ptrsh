@@ -29,16 +29,21 @@ add_executable(spot_micro_motion_cmd_node
   src/smfsm/spot_micro_walk.cpp
 )
 
-# Includes (Headers liegen in include/, src/smfsm/, header-only RateLimiter)
+# Includes:
+#  - public headers unter include/
+#  - zusätzlich include/spot_micro_motion_cmd (wegen #include "spot_micro_motion_cmd.h")
+#  - src/, src/smfsm/, header-only RateLimiter
+#  - Paket-Root (wegen utils.h im Root)
 target_include_directories(spot_micro_motion_cmd_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/spot_micro_motion_cmd>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/smfsm>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/rate_limited_first_order_filter>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
 
-# Link-/Paket-Abhängigkeiten
 ament_target_dependencies(spot_micro_motion_cmd_node
   rclcpp
   std_msgs
@@ -46,6 +51,7 @@ ament_target_dependencies(spot_micro_motion_cmd_node
   i2c_pwm_board_msgs
   spot_micro_kinematics
 )
+
 target_link_libraries(spot_micro_motion_cmd_node Eigen3::Eigen)
 
 # Install
