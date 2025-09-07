@@ -1,6 +1,0 @@
-ros2_i2cpwmboard:
-  ros__parameters:
-    i2c_bus: 4
-    i2c_address: 0x40
-    pwm_frequency: 50
-    # weitere HW-Parameter nach Bedarf …
