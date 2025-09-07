@@ -1,8 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include "spot_micro_motion_cmd/spot_micro_motion_cmd.h"
 
-using namespace std::chrono_literals;
-
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
@@ -10,14 +8,18 @@ int main(int argc, char** argv)
 
   smmc::SpotMicroMotionCmd app(node.get());
 
-  // Timer für periodisches Publizieren
-  const double hz = node->get_parameter("publish_rate_hz").get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET
-                      ? node->get_parameter("publish_rate_hz").as_double()
-                      : 50.0;
-  auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(1.0 / hz));
+  // Publish-Rate einlesen oder Default 50Hz
+  double hz = 50.0;
+  if (node->has_parameter("publish_rate_hz"))
+    hz = node->get_parameter("publish_rate_hz").as_double();
+  auto period = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(1.0/hz));
 
-  auto timer = node->create_wall_timer(period, [&app]() {
-    app.tick();
+  auto last = node->now();
+  auto timer = node->create_wall_timer(period, [&, node, period, &last](){
+    auto now = node->now();
+    const float dt = static_cast<float>((now - last).seconds());
+    last = now;
+    app.tick(dt > 0.f ? dt : 1.f/static_cast<float>(hz));
   });
 
   rclcpp::spin(node);

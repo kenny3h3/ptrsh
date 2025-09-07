@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(spot_micro_motion_cmd)
 
-# Compiler
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -std=c++17)
 endif()
 
-# ROS 2 Abhängigkeiten
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -15,7 +13,6 @@ find_package(i2c_pwm_board_msgs REQUIRED)
 find_package(spot_micro_kinematics REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-# ---- Quellen: exakt wie in deiner Ordnerstruktur ----
 add_executable(spot_micro_motion_cmd_node
   src/spot_micro_motion_cmd_node.cpp
   src/spot_micro_motion_cmd.cpp
@@ -29,18 +26,10 @@ add_executable(spot_micro_motion_cmd_node
   src/smfsm/spot_micro_walk.cpp
 )
 
-# Includes:
-#  - public headers unter include/
-#  - zusätzlich include/spot_micro_motion_cmd (wegen #include "spot_micro_motion_cmd.h")
-#  - src/, src/smfsm/, header-only RateLimiter
-#  - Paket-Root (wegen utils.h im Root)
 target_include_directories(spot_micro_motion_cmd_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/spot_micro_motion_cmd>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/smfsm>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/rate_limited_first_order_filter>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>              # falls lokal benötigte headers
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/smfsm>        # legacy includes – jetzt ROS2
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
 )
 
@@ -54,11 +43,11 @@ ament_target_dependencies(spot_micro_motion_cmd_node
 
 target_link_libraries(spot_micro_motion_cmd_node Eigen3::Eigen)
 
-# Install
 install(TARGETS spot_micro_motion_cmd_node
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
-install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME} OPTIONAL)
-install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME} OPTIONAL)
+
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME})
+install(DIRECTORY config launch DESTINATION share/${PROJECT_NAME} OPTIONAL)
 
 ament_package()
