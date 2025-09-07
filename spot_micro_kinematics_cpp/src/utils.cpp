@@ -1,5 +1,6 @@
 #include "spot_micro_kinematics/utils.h"
 #include <cmath>
+#include <algorithm>  // std::max, std::min
 
 namespace smk {
 
@@ -9,7 +10,11 @@ Matrix4f homogRotXyz(float x_ang, float y_ang, float z_ang){
   Eigen::AngleAxisf rx(x_ang, Eigen::Vector3f::UnitX());
   Eigen::AngleAxisf ry(y_ang, Eigen::Vector3f::UnitY());
   Eigen::AngleAxisf rz(z_ang, Eigen::Vector3f::UnitZ());
-  Eigen::Matrix3f R = rz * ry * rx;
+
+  // Quaternion -> RotationMatrix
+  Eigen::Quaternionf q = rz * ry * rx;
+  Eigen::Matrix3f R = q.toRotationMatrix();
+
   Matrix4f T = Matrix4f::Identity();
   T.block<3,3>(0,0) = R;
   return T;
@@ -47,15 +52,19 @@ Matrix4f ht0To4(const JointAngles& q,const LinkLengths& ll,bool){
 JointAngles ikine(const Point& p,const LinkLengths& ll,bool){
   JointAngles q{};
   q.q1 = std::atan2(p.y,p.x);
+
   float R = std::sqrt(p.x*p.x + p.y*p.y);
   float x = R, z = p.z;
+
   float a = ll.l2, b = ll.l3;
   float c2 = (x*x + z*z - a*a - b*b)/(2.f*a*b);
   c2 = std::max(-1.f,std::min(1.f,c2));
   q.q3 = std::acos(c2);
+
   float k1 = a + b*std::cos(q.q3);
   float k2 = b*std::sin(q.q3);
   q.q2 = std::atan2(z,x) - std::atan2(k2,k1);
+
   return q;
 }
 
