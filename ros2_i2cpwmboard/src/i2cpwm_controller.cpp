@@ -1,95 +1,100 @@
-#include "rclcpp/rclcpp.hpp"
-#include "ros2_i2cpwmboard/msg/servo_config.hpp"
-#include "ros2_i2cpwmboard/srv/int_value.hpp"
-#include "ros2_i2cpwmboard/srv/drive_mode.hpp"
-#include "ros2_i2cpwmboard/srv/servos_config.hpp"
-#include "ros2_i2cpwmboard/srv/stop_servos.hpp"
-#include "ros2_i2cpwmboard/msg/servo_array.hpp"
 #include "ros2_i2cpwmboard/i2cpwm_controller.hpp"
 
-I2CPWMController::I2CPWMController() : Node("i2cpwm_controller") {
-    servo_configs_ = std::map<int, ros2_i2cpwmboard::msg::ServoConfig>();
+using std::placeholders::_1;
+using std::placeholders::_2;
 
-    srv_set_value_ = this->create_service<ros2_i2cpwmboard::srv::IntValue>(
-        "set_value",
-        std::bind(&I2CPWMController::handle_set_value, this, std::placeholders::_1, std::placeholders::_2)
-    );
+I2CPWMController::I2CPWMController() : rclcpp::Node("i2cpwm_controller") {
+  // Services
+  srv_drive_mode_ = this->create_service<ros2_i2cpwmboard::srv::DriveMode>(
+      "drive_mode",
+      std::bind(&I2CPWMController::handle_drive_mode, this, _1, _2));
 
-    srv_drive_mode_ = this->create_service<ros2_i2cpwmboard::srv::DriveMode>(
-        "drive_mode",
-        std::bind(&I2CPWMController::handle_drive_mode, this, std::placeholders::_1, std::placeholders::_2)
-    );
+  srv_servos_config_ = this->create_service<ros2_i2cpwmboard::srv::ServosConfig>(
+      "servos_config",
+      std::bind(&I2CPWMController::handle_servos_config, this, _1, _2));
 
-    srv_servos_config_ = this->create_service<ros2_i2cpwmboard::srv::ServosConfig>(
-        "servos_config",
-        std::bind(&I2CPWMController::handle_servos_config, this, std::placeholders::_1, std::placeholders::_2)
-    );
+  srv_stop_servos_ = this->create_service<ros2_i2cpwmboard::srv::StopServos>(
+      "stop_servos",
+      std::bind(&I2CPWMController::handle_stop_servos, this, _1, _2));
 
-    srv_stop_servos_ = this->create_service<ros2_i2cpwmboard::srv::StopServos>(
-        "stop_servos",
-        std::bind(&I2CPWMController::handle_stop_servos, this, std::placeholders::_1, std::placeholders::_2)
-    );
+  // Subscriptions
+  sub_servo_absolute_ = this->create_subscription<ros2_i2cpwmboard::msg::ServoArray>(
+      "servo_absolute", rclcpp::QoS(10),
+      std::bind(&I2CPWMController::handle_servo_absolute, this, _1));
 
-    servo_absolute_sub_ = this->create_subscription<ros2_i2cpwmboard::msg::ServoArray>(
-        "servos_absolute", 10, std::bind(&I2CPWMController::handle_servo_absolute, this, std::placeholders::_1)
-    );
+  sub_servo_proportional_ = this->create_subscription<ros2_i2cpwmboard::msg::ServoArray>(
+      "servo_proportional", rclcpp::QoS(10),
+      std::bind(&I2CPWMController::handle_servo_proportional, this, _1));
 
-    servo_proportional_sub_ = this->create_subscription<ros2_i2cpwmboard::msg::ServoArray>(
-        "servos_proportional", 10, std::bind(&I2CPWMController::handle_servo_proportional, this, std::placeholders::_1)
-    );
+  RCLCPP_INFO(this->get_logger(), "i2cpwm_controller node started");
 }
 
-void I2CPWMController::handle_set_value(const std::shared_ptr<ros2_i2cpwmboard::srv::IntValue::Request> request,
-                                       std::shared_ptr<ros2_i2cpwmboard::srv::IntValue::Response> response) {
-    RCLCPP_INFO(this->get_logger(), "Got IntValue request: %d", request->value);
-    setPWM(1, 0, request->value); // Channel 1, on_time=0, off_time=value
-    response->error = 0; // Erfolg anzeigen
+// Services
+void I2CPWMController::handle_drive_mode(
+    const std::shared_ptr<ros2_i2cpwmboard::srv::DriveMode::Request> request,
+    std::shared_ptr<ros2_i2cpwmboard::srv::DriveMode::Response> /*response*/) {
+
+  RCLCPP_INFO(this->get_logger(),
+              "DriveMode: mode=%s, rpm=%.2f, radius=%.2f, track=%.2f, scale=%.2f",
+              request->mode.c_str(), request->rpm, request->radius,
+              request->track, request->scale);
+
+  // TODO: Fahr-/Antriebslogik
 }
 
-void I2CPWMController::handle_drive_mode(const std::shared_ptr<ros2_i2cpwmboard::srv::DriveMode::Request> request,
-                                        std::shared_ptr<ros2_i2cpwmboard::srv::DriveMode::Response> response) {
-    RCLCPP_INFO(this->get_logger(), "Got DriveMode request: mode=%s, rpm=%d, radius=%d, track=%d, scale=%d",
-                request->mode.c_str(), request->rpm, request->radius, request->track, request->scale);
-    response->error = 0; // Erfolg anzeigen
+void I2CPWMController::handle_servos_config(
+    const std::shared_ptr<ros2_i2cpwmboard::srv::ServosConfig::Request> request,
+    std::shared_ptr<ros2_i2cpwmboard::srv::ServosConfig::Response> /*response*/) {
+
+  for (const auto & cfg : request->servos) {
+    servo_configs_[cfg.servo] = cfg;  // center, range, direction, scale
+    RCLCPP_INFO(this->get_logger(),
+                "Configured servo %d: center=%d, range=%d, direction=%d, scale=%d",
+                cfg.servo, cfg.center, cfg.range, cfg.direction, cfg.scale);
+  }
 }
 
-void I2CPWMController::handle_servos_config(const std::shared_ptr<ros2_i2cpwmboard::srv::ServosConfig::Request> request,
-                                           std::shared_ptr<ros2_i2cpwmboard::srv::ServosConfig::Response> response) {
-    for (const auto& servo : request->servos) {
-        if (servo_configs_.find(servo.servo) != servo_configs_.end()) {
-            servo_configs_[servo.servo] = servo;
-            setPWM(servo.servo, servo.on_time, servo.off_time);
-        }
+void I2CPWMController::handle_stop_servos(
+    const std::shared_ptr<ros2_i2cpwmboard::srv::StopServos::Request> /*request*/,
+    std::shared_ptr<ros2_i2cpwmboard::srv::StopServos::Response> /*response*/) {
+
+  for (auto & kv : servo_configs_) {
+    setPWM(kv.first, 0);
+  }
+  RCLCPP_INFO(this->get_logger(), "All servos stopped.");
+}
+
+// Subscriptions
+void I2CPWMController::handle_servo_absolute(
+    const std::shared_ptr<ros2_i2cpwmboard::msg::ServoArray> msg) {
+  for (const auto & s : msg->servos) {
+    setPWM(s.servo, s.value);
+  }
+}
+
+void I2CPWMController::handle_servo_proportional(
+    const std::shared_ptr<ros2_i2cpwmboard::msg::ServoArray> msg) {
+  for (const auto & s : msg->servos) {
+    auto it = servo_configs_.find(s.servo);
+    if (it != servo_configs_.end()) {
+      int adjusted = static_cast<int>(static_cast<long long>(s.value) * it->second.scale / 100);
+      setPWM(s.servo, adjusted);
+    } else {
+      setPWM(s.servo, s.value);
     }
-    response->error = 0; // Erfolg anzeigen
+  }
 }
 
-void I2CPWMController::handle_stop_servos(const std::shared_ptr<ros2_i2cpwmboard::srv::StopServos::Request>,
-                                         std::shared_ptr<ros2_i2cpwmboard::srv::StopServos::Response> response) {
-    for (const auto& config : servo_configs_) {
-        setPWM(config.first, 0, 0); // Stoppe alle Servos
-    }
-    response->error = 0; // Erfolg anzeigen
+// Hardware-Abstraktion (Stub)
+void I2CPWMController::setPWM(int channel, int value) {
+  // TODO: konkrete I2C/PCA9685-Ansteuerung hier implementieren
+  RCLCPP_DEBUG(this->get_logger(), "setPWM(channel=%d, value=%d)", channel, value);
 }
 
-void I2CPWMController::handle_servo_absolute(const std::shared_ptr<ros2_i2cpwmboard::msg::ServoArray> msg) {
-    for (const auto& servo : msg->servos) {
-        if (servo_configs_.find(servo.servo) != servo_configs_.end()) {
-            setPWM(servo.servo, servo.on_time, servo.off_time);
-        }
-    }
-}
-
-void I2CPWMController::handle_servo_proportional(const std::shared_ptr<ros2_i2cpwmboard::msg::ServoArray> msg) {
-    for (const auto& servo : msg->servos) {
-        if (servo_configs_.find(servo.servo) != servo_configs_.end()) {
-            int adjusted_off_time = servo.off_time * servo_configs_[servo.servo].scale / 100;
-            setPWM(servo.servo, servo.on_time, adjusted_off_time);
-        }
-    }
-}
-
-void I2CPWMController::setPWM(int channel, int on_time, int off_time) {
-    // Dummy-Implementierung: Ersetze dies mit der tatsächlichen I2C-Logik
-    RCLCPP_INFO(this->get_logger(), "setPWM called: channel=%d, on_time=%d, off_time=%d", channel, on_time, off_time);
+// main
+int main(int argc, char ** argv) {
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<I2CPWMController>());
+  rclcpp::shutdown();
+  return 0;
 }

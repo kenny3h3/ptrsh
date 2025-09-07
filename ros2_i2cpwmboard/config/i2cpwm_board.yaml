@@ -1,3 +1,6 @@
-i2cpwm_controller:
+ros2_i2cpwmboard:
   ros__parameters:
-    i2c_bus: "/dev/i2c-4"  # Beispiel für Raspberry Pi I2C Bus 4
+    i2c_bus: 4
+    i2c_address: 0x40
+    pwm_frequency: 50
+    # weitere HW-Parameter nach Bedarf …
