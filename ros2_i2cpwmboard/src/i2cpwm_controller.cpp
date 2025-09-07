@@ -5,7 +5,7 @@
 #include "ros2_i2cpwmboard/srv/servos_config.hpp"
 #include "ros2_i2cpwmboard/srv/stop_servos.hpp"
 #include "ros2_i2cpwmboard/msg/servo_array.hpp"
-#include "i2cpwm_controller.hpp"
+#include "ros2_i2cpwmboard/i2cpwm_controller.hpp"
 
 I2CPWMController::I2CPWMController() : Node("i2cpwm_controller") {
     servo_configs_ = std::map<int, ros2_i2cpwmboard::msg::ServoConfig>();
@@ -83,7 +83,6 @@ void I2CPWMController::handle_servo_absolute(const std::shared_ptr<ros2_i2cpwmbo
 void I2CPWMController::handle_servo_proportional(const std::shared_ptr<ros2_i2cpwmboard::msg::ServoArray> msg) {
     for (const auto& servo : msg->servos) {
         if (servo_configs_.find(servo.servo) != servo_configs_.end()) {
-            // Proportionale Anpassung (Platzhalter-Logik)
             int adjusted_off_time = servo.off_time * servo_configs_[servo.servo].scale / 100;
             setPWM(servo.servo, servo.on_time, adjusted_off_time);
         }
