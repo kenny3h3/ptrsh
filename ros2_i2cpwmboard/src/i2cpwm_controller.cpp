@@ -1,9 +1,9 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/int32.hpp>
-#include <i2cpwm_board_ros2/srv/int_value.hpp>
-#include <i2cpwm_board_ros2/srv/drive_mode.hpp>
-#include <i2cpwm_board_ros2/srv/servos_config.hpp>
-#include <i2cpwm_board_ros2/srv/stop_servos.hpp>
+#include <ros2_i2cpwmboard/srv/int_value.hpp>
+#include <ros2_i2cpwmboard/srv/drive_mode.hpp>
+#include <ros2_i2cpwmboard/srv/servos_config.hpp>
+#include <ros2_i2cpwmboard/srv/stop_servos.hpp>
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>

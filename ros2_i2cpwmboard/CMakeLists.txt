@@ -38,10 +38,9 @@ add_executable(i2cpwm_controller src/i2cpwm_controller.cpp)
 ament_target_dependencies(i2cpwm_controller rclcpp std_msgs)
 target_link_libraries(i2cpwm_controller i2c) # Link libi2c (ensure libi2c-dev is installed)
 
-# Link ROS 2 interfaces
-rosidl_target_interfaces(i2cpwm_controller
-  ${PROJECT_NAME} "rosidl_typesupport_cpp"
-)
+# Link ROS 2 interfaces (aktualisiert)
+rosidl_get_typesupport_target(cpp_typesupport_target "${PROJECT_NAME}" "rosidl_typesupport_cpp")
+target_link_libraries(i2cpwm_controller "${cpp_typesupport_target}")
 
 # Install targets
 install(TARGETS
