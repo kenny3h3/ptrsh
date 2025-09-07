@@ -1,14 +1,17 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.16)
 project(ros2_i2cpwmboard)
 
-# Finde Abhängigkeiten
+# Core
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-#find_package(ros2_i2cpwmboard REQUIRED)
 
-# Generiere Interfaces für Nachrichten und Services
+# Messages / Interfaces
 find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(builtin_interfaces REQUIRED)
 
+# ---- Interface-Generierung ----
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Position.msg"
   "msg/PositionArray.msg"
@@ -20,36 +23,28 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/IntValue.srv"
   "srv/ServosConfig.srv"
   "srv/StopServos.srv"
-  DEPENDENCIES builtin_interfaces std_msgs
+  DEPENDENCIES builtin_interfaces std_msgs geometry_msgs
 )
 
-# Finde alle Quelldateien
-file(GLOB_RECURSE SOURCE_FILES
-  src/*.cpp
-)
+# ---- Node ----
+add_executable(i2cpwm_controller src/i2cpwm_controller.cpp)
+target_include_directories(i2cpwm_controller PUBLIC include)
 
-# Definiere das ausführbare Programm
-add_executable(i2cpwm_controller
-  ${SOURCE_FILES}
-)
+# NICHT gegen das Paket selbst linken – sondern gegen die eigentlichen Abhängigkeiten
+ament_target_dependencies(i2cpwm_controller rclcpp std_msgs geometry_msgs)
 
-# Setze die Include-Verzeichnisse
-target_include_directories(i2cpwm_controller PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
+# Der Node braucht die generierten Types (C++)
+rosidl_target_interfaces(i2cpwm_controller ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-# Linke die Abhängigkeiten
-ament_target_dependencies(i2cpwm_controller rclcpp ros2_i2cpwmboard)
-
-# Installiere das ausführbare Programm
+# ---- Install ----
 install(TARGETS i2cpwm_controller
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# Installiere Header-Dateien
-install(DIRECTORY include/
-  DESTINATION include
-)
+install(DIRECTORY include/ DESTINATION include)
+install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME})
+
+# Runtime-Abhängigkeiten der generierten Schnittstellen exportieren
+ament_export_dependencies(rosidl_default_runtime)
 
 ament_package()
