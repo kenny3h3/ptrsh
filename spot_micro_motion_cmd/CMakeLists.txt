@@ -35,4 +35,24 @@ target_include_directories(spot_micro_motion_cmd_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/smfsm>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/rate_limited_first_order_filter>
-  $<INSTALL_INTERFACE:includ_
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+)
+
+# Link-/Paket-Abhängigkeiten
+ament_target_dependencies(spot_micro_motion_cmd_node
+  rclcpp
+  std_msgs
+  geometry_msgs
+  i2c_pwm_board_msgs
+  spot_micro_kinematics
+)
+target_link_libraries(spot_micro_motion_cmd_node Eigen3::Eigen)
+
+# Install
+install(TARGETS spot_micro_motion_cmd_node
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+install(DIRECTORY include/ DESTINATION include/${PROJECT_NAME} OPTIONAL)
+install(DIRECTORY launch config DESTINATION share/${PROJECT_NAME} OPTIONAL)
+
+ament_package()
