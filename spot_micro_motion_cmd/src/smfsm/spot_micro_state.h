@@ -10,6 +10,7 @@
 class SpotMicroMotionCmd;
 struct SpotMicroNodeConfig;
 
+
 // Struct holding a filter for three things relative to axes
 struct XyzFilters {
   RateLmtdFirstOrderFilter x;
@@ -29,8 +30,9 @@ struct BodyStateFilters {
 
 class SpotMicroState {
  public:
+
   // Constructor
-  SpotMicroState();
+  SpotMicroState(); 
 
   // Destructor
   virtual ~SpotMicroState();
@@ -40,7 +42,7 @@ class SpotMicroState {
   virtual void handleInputCommands(const smk::BodyState& body_state,
                                    const SpotMicroNodeConfig& smnc,
                                    const Command& cmd,
-                                   SpotMicroMotionCmd* smmc,
+                                   SpotMicroMotionCmd* smmc, 
                                    smk::BodyState* body_state_cmd) {}
 
   virtual void init(const smk::BodyState& body_state,
@@ -53,6 +55,7 @@ class SpotMicroState {
   }
 
  protected:
+
   // Calls SpotMicroMotionCmd's method to change the currently active state
   void changeState(SpotMicroMotionCmd* smmc, std::unique_ptr<SpotMicroState> sms);
 
@@ -76,8 +79,10 @@ class SpotMicroState {
 
   // Checks equality of body state structs to an absolute tolerance. Returns
   // true if all absolute value differences of body state values are within
-  // tolerance
+  // tolernace
   virtual bool checkBodyStateEquality(const smk::BodyState& body_state1,
                                       const smk::BodyState& body_state2,
                                       float tol);
+
 };
+

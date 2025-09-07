@@ -3,7 +3,7 @@
 #include "spot_micro_transition_stand.h"
 
 SpotMicroIdleState::SpotMicroIdleState() {
-  // Constructor, doesn't need to do anything, for now...
+  // Construcotr, doesn't need to do anything, for now...
   //std::cout << "SpotMicroIdleState Ctor" << std::endl;
 }
 
@@ -19,13 +19,15 @@ void SpotMicroIdleState::handleInputCommands(const smk::BodyState& body_state,
   if (smnc.debug_mode) {
     std::cout << "In Spot Micro Idle State" << std::endl;
   }
-
+  
   // Check if stand command issued, if so, transition to stand state
   if (cmd.getStandCmd() == true) {
     changeState(smmc, std::make_unique<SpotMicroTransitionStandState>());
-
+  
   } else {
     // Otherwise, just command idle servo commands
     smmc->publishZeroServoAbsoluteCommand();
   }
+
 }
+

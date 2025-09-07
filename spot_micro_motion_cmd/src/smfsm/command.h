@@ -1,11 +1,12 @@
 #pragma once
 
-#include "std_msgs/msg/float32.hpp"
-#include "std_msgs/msg/bool.hpp"
+#include "std_msgs/Float32.h"
+#include "std_msgs/Bool.h"
+
 
 class Command {
  public:
-
+  
   float x_vel_cmd_mps_;
   float y_vel_cmd_mps_;
   float yaw_rate_cmd_rps_;
@@ -16,7 +17,7 @@ class Command {
   bool idle_cmd_;
   bool walk_cmd_;
   bool stand_cmd_;
-
+ 
   // Constructor
   Command()
       : x_vel_cmd_mps_(0.0)
@@ -41,12 +42,12 @@ class Command {
 
   bool getWalkCmd() const {
      return walk_cmd_;
-  }
-
+  } 
+ 
   float getXSpeedCmd() const {
     return x_vel_cmd_mps_;
   }
-
+ 
   float getYSpeedCmd() const {
     return y_vel_cmd_mps_;
   }
@@ -75,7 +76,7 @@ class Command {
     theta_cmd_ = 0;
     psi_cmd_ = 0;
   }
-
+ 
   void resetEventCmds() {
     // Reset all event commands to false
     idle_cmd_ = false;

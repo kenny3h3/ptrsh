@@ -8,7 +8,7 @@ struct ContactFeet {
   bool right_back_in_swing;
   bool right_front_in_swing;
   bool left_front_in_swing;
-  bool left_back_in_swing;
+  bool left_back_in_swing;\
 };
 
 class SpotMicroWalkState : public SpotMicroState {
@@ -25,7 +25,7 @@ class SpotMicroWalkState : public SpotMicroState {
   virtual void init(const smk::BodyState& body_state,
                     const SpotMicroNodeConfig& smnc,
                     const Command& cmd,
-                    SpotMicroMotionCmd* smmc);
+                    SpotMicroMotionCmd* smmc); 
 
   // Returns current state name as a string
   virtual std::string getCurrentStateName() {
@@ -33,6 +33,7 @@ class SpotMicroWalkState : public SpotMicroState {
   }
 
  private:
+
   SpotMicroNodeConfig smnc_;
   smk::BodyState cmd_state_;
 
@@ -41,11 +42,12 @@ class SpotMicroWalkState : public SpotMicroState {
   int subphase_ticks_;
   ContactFeet contact_feet_states_;
 
-  // Updates the integer phase index corresponding to the current phase the
+  // Updates the integer phase index cooresponding to the current phase the
   // robot gait should be in. Updates the subphase ticks, the ticks since the
   // start of the current phase. And updates the contact feet states
   // representing which feet are in swing and stance phases
   void updatePhaseData();
+
 
   // Steps the gait controller one timestep, sets the feet command state, and
   // possibly other command states (such as xyz position, euler angles) if
@@ -67,9 +69,11 @@ class SpotMicroWalkState : public SpotMicroState {
                                 float swing_proportion,
                                 const smk::Point& default_stance_foot_pos);
 
-  // Steps the body shift controller that shifts the body xyz position
+  // Steps the body shift controller that shifts the body xyz position 
   // to maintain balance during the gait cycle
   smk::Point stepBodyShift(const smk::BodyState& body_state,
                            const Command& cmd,
                            const SpotMicroNodeConfig& smnc);
 };
+
+  
