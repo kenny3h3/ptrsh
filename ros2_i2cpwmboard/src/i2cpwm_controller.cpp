@@ -43,32 +43,32 @@ public:
     RCLCPP_INFO(this->get_logger(), "I2C PWM Controller started on %s.", i2c_bus.c_str());
 
     // Services
-    srv_set_value_ = this->create_service<i2cpwm_board_ros2::srv::IntValue>(
+    srv_set_value_ = this->create_service<ros2_i2cpwmboard::srv::IntValue>(
       "set_value",
       std::bind(&I2CPWMController::handle_set_value, this, std::placeholders::_1, std::placeholders::_2)
     );
 
-    srv_drive_mode_ = this->create_service<i2cpwm_board_ros2::srv::DriveMode>(
+    srv_drive_mode_ = this->create_service<ros2_i2cpwmboard::srv::DriveMode>(
       "drive_mode",
       std::bind(&I2CPWMController::handle_drive_mode, this, std::placeholders::_1, std::placeholders::_2)
     );
 
-    srv_servos_config_ = this->create_service<i2cpwm_board_ros2::srv::ServosConfig>(
+    srv_servos_config_ = this->create_service<ros2_i2cpwmboard::srv::ServosConfig>(
       "servos_config",
       std::bind(&I2CPWMController::handle_servos_config, this, std::placeholders::_1, std::placeholders::_2)
     );
 
-    srv_stop_servos_ = this->create_service<i2cpwm_board_ros2::srv::StopServos>(
+    srv_stop_servos_ = this->create_service<ros2_i2cpwmboard::srv::StopServos>(
       "stop_servos",
       std::bind(&I2CPWMController::handle_stop_servos, this, std::placeholders::_1, std::placeholders::_2)
     );
 
     // Subscribers for servo commands
-    servo_absolute_sub_ = this->create_subscription<i2cpwm_board_ros2::msg::ServoArray>(
+    servo_absolute_sub_ = this->create_subscription<ros2_i2cpwmboard::msg::ServoArray>(
       "servos_absolute", 10, std::bind(&I2CPWMController::handle_servo_absolute, this, std::placeholders::_1)
     );
 
-    servo_proportional_sub_ = this->create_subscription<i2cpwm_board_ros2::msg::ServoArray>(
+    servo_proportional_sub_ = this->create_subscription<ros2_i2cpwmboard::msg::ServoArray>(
       "servos_proportional", 10, std::bind(&I2CPWMController::handle_servo_proportional, this, std::placeholders::_1)
     );
   }
@@ -82,7 +82,7 @@ public:
 
 private:
   int i2c_fd_ = -1;
-  std::map<int, i2cpwm_board_ros2::msg::ServoConfig> servo_configs_;
+  std::map<int, ros2_i2cpwmboard::msg::ServoConfig> servo_configs_;
 
   void initializePCA9685()
   {
@@ -117,8 +117,8 @@ private:
   }
 
   void handle_set_value(
-    const std::shared_ptr<i2cpwm_board_ros2::srv::IntValue::Request> request,
-    std::shared_ptr<i2cpwm_board_ros2::srv::IntValue::Response> response)
+    const std::shared_ptr<ros2_i2cpwmboard::srv::IntValue::Request> request,
+    std::shared_ptr<ros2_i2cpwmboard::srv::IntValue::Response> response)
   {
     RCLCPP_INFO(this->get_logger(), "Got IntValue request: %d", request->data);
     setPWM(1, 0, request->data); // Channel 1, on_time=0, off_time=data
@@ -126,8 +126,8 @@ private:
   }
 
   void handle_drive_mode(
-    const std::shared_ptr<i2cpwm_board_ros2::srv::DriveMode::Request> request,
-    std::shared_ptr<i2cpwm_board_ros2::srv::DriveMode::Response> response)
+    const std::shared_ptr<ros2_i2cpwmboard::srv::DriveMode::Request> request,
+    std::shared_ptr<ros2_i2cpwmboard::srv::DriveMode::Response> response)
   {
     RCLCPP_INFO(this->get_logger(), "Drive mode: %s, RPM: %f, Radius: %f, Track: %f, Scale: %f",
                 request->mode.c_str(), request->rpm, request->radius, request->track, request->scale);
@@ -136,8 +136,8 @@ private:
   }
 
   void handle_servos_config(
-    const std::shared_ptr<i2cpwm_board_ros2::srv::ServosConfig::Request> request,
-    std::shared_ptr<i2cpwm_board_ros2::srv::ServosConfig::Response> response)
+    const std::shared_ptr<ros2_i2cpwmboard::srv::ServosConfig::Request> request,
+    std::shared_ptr<ros2_i2cpwmboard::srv::ServosConfig::Response> response)
   {
     for (const auto& servo : request->servos) {
       RCLCPP_INFO(this->get_logger(), "Configuring servo %d: center=%d, range=%d, direction=%d, center_angle=%f, max_angle=%f",
@@ -151,8 +151,8 @@ private:
   }
 
   void handle_stop_servos(
-    const std::shared_ptr<i2cpwm_board_ros2::srv::StopServos::Request> request,
-    std::shared_ptr<i2cpwm_board_ros2::srv::StopServos::Response> response)
+    const std::shared_ptr<ros2_i2cpwmboard::srv::StopServos::Request> request,
+    std::shared_ptr<ros2_i2cpwmboard::srv::StopServos::Response> response)
   {
     RCLCPP_INFO(this->get_logger(), "Stopping all servos");
     for (int i = 1; i <= 16; ++i) {
@@ -162,7 +162,7 @@ private:
   }
 
   void handle_servo_absolute(
-    const std::shared_ptr<i2cpwm_board_ros2::msg::ServoArray> msg)
+    const std::shared_ptr<ros2_i2cpwmboard::msg::ServoArray> msg)
   {
     for (const auto& servo : msg->servos) {
       if (servo_configs_.find(servo.servo) != servo_configs_.end()) {
@@ -176,7 +176,7 @@ private:
   }
 
   void handle_servo_proportional(
-    const std::shared_ptr<i2cpwm_board_ros2::msg::ServoArray> msg)
+    const std::shared_ptr<ros2_i2cpwmboard::msg::ServoArray> msg)
   {
     for (const auto& servo : msg->servos) {
       if (servo_configs_.find(servo.servo) != servo_configs_.end()) {
@@ -189,12 +189,12 @@ private:
     }
   }
 
-  rclcpp::Service<i2cpwm_board_ros2::srv::IntValue>::SharedPtr srv_set_value_;
-  rclcpp::Service<i2cpwm_board_ros2::srv::DriveMode>::SharedPtr srv_drive_mode_;
-  rclcpp::Service<i2cpwm_board_ros2::srv::ServosConfig>::SharedPtr srv_servos_config_;
-  rclcpp::Service<i2cpwm_board_ros2::srv::StopServos>::SharedPtr srv_stop_servos_;
-  rclcpp::Subscription<i2cpwm_board_ros2::msg::ServoArray>::SharedPtr servo_absolute_sub_;
-  rclcpp::Subscription<i2cpwm_board_ros2::msg::ServoArray>::SharedPtr servo_proportional_sub_;
+  rclcpp::Service<ros2_i2cpwmboard::srv::IntValue>::SharedPtr srv_set_value_;
+  rclcpp::Service<ros2_i2cpwmboard::srv::DriveMode>::SharedPtr srv_drive_mode_;
+  rclcpp::Service<ros2_i2cpwmboard::srv::ServosConfig>::SharedPtr srv_servos_config_;
+  rclcpp::Service<ros2_i2cpwmboard::srv::StopServos>::SharedPtr srv_stop_servos_;
+  rclcpp::Subscription<ros2_i2cpwmboard::msg::ServoArray>::SharedPtr servo_absolute_sub_;
+  rclcpp::Subscription<ros2_i2cpwmboard::msg::ServoArray>::SharedPtr servo_proportional_sub_;
 };
 
 int main(int argc, char ** argv)
