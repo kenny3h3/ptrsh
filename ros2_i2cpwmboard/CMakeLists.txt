@@ -4,7 +4,7 @@ project(ros2_i2cpwmboard)
 # Finde Abhängigkeiten
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(ros2_i2cpwmboard REQUIRED)
+#find_package(ros2_i2cpwmboard REQUIRED)
 
 # Generiere Interfaces für Nachrichten und Services
 find_package(rosidl_default_generators REQUIRED)
